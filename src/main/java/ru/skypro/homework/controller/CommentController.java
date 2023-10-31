@@ -1,10 +1,14 @@
 package ru.skypro.homework.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ru.skypro.homework.dto.CommentDTO;
 import ru.skypro.homework.dto.CommentInfoDTO;
+import ru.skypro.homework.pojo.User;
+import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.CommentService;
 
 import java.util.HashMap;
@@ -14,21 +18,21 @@ import java.util.Map;
 @RestController
 @CrossOrigin(value = "http://localhost:3000")
 @RequestMapping("/ads")
+@RequiredArgsConstructor
 public class CommentController {
 
     private final CommentService commentService;
+    private final UserRepository userRepository;
 
-    public CommentController(CommentService commentService) {
-        this.commentService = commentService;
-    }
 
     @PostMapping("/{id}/comments")
     public ResponseEntity<CommentDTO> addCommentToAd(
+            Authentication authentication,
             @PathVariable("id") Long pk,
             @RequestBody CommentDTO commentDTO
     ) {
-
-        CommentDTO createdComment = commentService.addCommentToAd(pk, commentDTO);
+        User user = userRepository.findUserByUserName(authentication.getName());
+        CommentDTO createdComment = commentService.addCommentToAd(pk, commentDTO, user.getUserID());
 
         if (createdComment != null) {
             return ResponseEntity.status(HttpStatus.CREATED).body(createdComment);
@@ -39,13 +43,13 @@ public class CommentController {
 
     @GetMapping("/{id}/comments")
     public ResponseEntity<Map<String, Object>> getCommentsByAdId(@PathVariable("id") Long pk) {
-            List<CommentInfoDTO> comments = commentService.getAllCommentsByPK(pk);
+        List<CommentInfoDTO> comments = commentService.getAllCommentsByPK(pk);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("count", comments.size());
-            response.put("results", comments);
+        Map<String, Object> response = new HashMap<>();
+        response.put("count", comments.size());
+        response.put("results", comments);
 
-            return ResponseEntity.ok(response);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{adId}/comments/{commentId}")
@@ -74,4 +78,3 @@ public class CommentController {
         }
     }
 }
-

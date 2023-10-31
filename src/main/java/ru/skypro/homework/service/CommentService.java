@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface CommentService {
 
-    CommentDTO addCommentToAd(Long pk, CommentDTO commentDTO);
+    CommentDTO addCommentToAd(Long pk, CommentDTO commentDTO, Long userId);
 
     List<CommentInfoDTO> getAllCommentsByPK(Long pk);
 
