@@ -2,6 +2,7 @@ package ru.skypro.homework.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
@@ -16,9 +17,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 public class WebSecurityConfig {
 
-
-
-private final UserService userService;
+    private final UserService userService;
 
     private static final String[] AUTH_WHITELIST = {
             "/swagger-resources/**",
@@ -62,6 +61,10 @@ private final UserService userService;
                         authorization ->
                                 authorization
                                         .mvcMatchers(AUTH_WHITELIST)
+
+//добавление эндпоинта, доступного без авторизации
+                                        .permitAll()
+                                        .mvcMatchers(HttpMethod.GET, "/ads")
                                         .permitAll()
                                         .mvcMatchers("/ads/**", "/users/**")
                                         .authenticated())
@@ -70,6 +73,7 @@ private final UserService userService;
                 .httpBasic(withDefaults());
         return http.build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {

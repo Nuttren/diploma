@@ -1,34 +1,36 @@
 package ru.skypro.homework.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.skypro.homework.dto.CommentDTO;
 import ru.skypro.homework.dto.CommentInfoDTO;
 import ru.skypro.homework.pojo.Ad;
 import ru.skypro.homework.pojo.Comment;
+import ru.skypro.homework.pojo.User;
 import ru.skypro.homework.repository.AdRepository;
 import ru.skypro.homework.repository.CommentRepository;
+import ru.skypro.homework.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
     private final AdRepository adRepository;
 
-    public CommentServiceImpl(CommentRepository commentRepository, AdRepository adRepository) {
-        this.commentRepository = commentRepository;
-        this.adRepository = adRepository;
-    }
+
 
     @Override
-    public CommentDTO addCommentToAd(Long pk, CommentDTO commentDTO) {
+    public CommentDTO addCommentToAd(Long pk, CommentDTO commentDTO, Long userId) {
         Ad ad = adRepository.findById(pk).orElse(null);
+
         if (ad != null) {
             Comment comment = new Comment();
             comment.setText(commentDTO.getText());
-            comment.setUserId(ad.getUser().getUserID());
+            comment.setUserId(userId);
             comment.setPk(pk);
             comment.setTimeStamp(comment.getTimeStamp());
 
@@ -103,6 +105,5 @@ public class CommentServiceImpl implements CommentService {
     }
 
 }
-
 
 
