@@ -1,7 +1,10 @@
 package ru.skypro.homework.service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.*;
 import ru.skypro.homework.pojo.Ad;
 import ru.skypro.homework.pojo.Comment;
@@ -21,12 +24,8 @@ import java.util.Optional;
 public class AdsServiceImpl implements AdsService {
 
     private final AdRepository adRepository;
-
-
     private final ImageService imageService;
-
     private final UserRepository userRepository;
-
     private final CommentRepository commentRepository;
 
     public AdsServiceImpl(AdRepository adRepository, ImageService imageService, UserRepository userRepository, CommentRepository commentRepository) {
@@ -39,7 +38,7 @@ public class AdsServiceImpl implements AdsService {
 
 
     @Override
-    public AdCreateDTO createAd (String userName, AdCreateDTO adCreateDTO, MultipartFile image) {
+    public AdCreateDTO createAd(String userName, AdCreateDTO adCreateDTO, MultipartFile image) {
         // Находим пользователя по его имени (userName)
         User user = userRepository.findUserByUserName(userName);
 
@@ -98,7 +97,7 @@ public class AdsServiceImpl implements AdsService {
             adsRequestDTO.setPk(ad.getPk());
             adsRequestDTO.setPrice(ad.getPrice());
             adsRequestDTO.setTitle(ad.getTitle());
-            adsRequestDTO.setImage("/"+ ad.getImage().getImagePath().replace("\\", "/"));
+            adsRequestDTO.setImage("/" + ad.getImage().getImagePath().replace("\\", "/"));
 
 
             adsRequestDTOs.add(adsRequestDTO);
@@ -122,7 +121,7 @@ public class AdsServiceImpl implements AdsService {
             adInfoDTO.setAuthorLastName(ad.getUser().getLastName());
             adInfoDTO.setDescription(ad.getDescription());
             adInfoDTO.setEmail(ad.getUser().getEmail());
-            adInfoDTO.setImage("/"+ ad.getImage().getImagePath().replace("\\", "/"));
+            adInfoDTO.setImage("/" + ad.getImage().getImagePath().replace("\\", "/"));
             adInfoDTO.setPhone(ad.getUser().getPhone());
             adInfoDTO.setPrice(ad.getPrice());
             adInfoDTO.setTitle(ad.getTitle());
@@ -136,7 +135,106 @@ public class AdsServiceImpl implements AdsService {
     }
 
     @Override
-    public String deleteAd(Long pk) {
+    public String deleteAd(Long pk, Authentication authentication) {
+        if (isAdmin(authentication) || isAuthor(authentication, pk)){
+            return removeAd(pk, authentication);
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
+    @Override
+    public AdUpdateDTO updateAd(Authentication authentication, Long pk, AdUpdateDTO adUpdateDTO) {
+        if (isAdmin(authentication) || isAuthor(authentication, pk)) {
+            Optional<Ad> optionalAd = adRepository.findById(pk);
+            if (optionalAd.isPresent()) {
+                Ad ad = optionalAd.get();
+
+                if (adUpdateDTO.getTitle() != null) {
+                    ad.setTitle(adUpdateDTO.getTitle());
+                }
+                if (adUpdateDTO.getPrice() != null) {
+                    ad.setPrice(adUpdateDTO.getPrice());
+                }
+                if (adUpdateDTO.getDescription() != null) {
+                    ad.setDescription(adUpdateDTO.getDescription());
+                }
+
+                // Сохраняем обновленное объявление в базу
+                adRepository.save(ad);
+
+                // Создаем объект AdsDTO для ответа с нужными полями
+                AdUpdateDTO responseAd = new AdUpdateDTO();
+                responseAd.setPrice(ad.getPrice());
+                responseAd.setTitle(ad.getTitle());
+                responseAd.setDescription(ad.getDescription());
+
+                return responseAd;
+            } else {
+                // Если объявление не найдено, возвращаем нулл, потом допилю исключение.
+                return null;
+            }
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+
+    @Override
+    public List<AllAdDTO> getAdsForUser(String userName) {
+        User user = userRepository.findUserByUserName(userName);
+        Long userId = user.getUserID();
+        List<Ad> userAds = adRepository.findAdsByUserUserID(userId);
+
+        List<AllAdDTO> allAdDTOs = new ArrayList<>();
+
+        for (Ad ad : userAds) {
+            AllAdDTO adDTO = new AllAdDTO();
+            adDTO.setAuthor(ad.getUser().getUserID()); // Устанавливаем айдишник объявления
+            adDTO.setImage("/" + ad.getImage().getImagePath().replace("\\", "/")); // Устанавливаем путь к изображению
+            adDTO.setPk(ad.getPk());
+            adDTO.setPrice(ad.getPrice());
+            adDTO.setTitle(ad.getTitle());
+
+            allAdDTOs.add(adDTO);
+        }
+
+        return allAdDTOs;
+    }
+
+    @Override
+    public void updateAdImage(Long pk, Image newImage) {
+        Ad ad = adRepository.findById(pk).orElse(null);
+        if (ad != null) {
+            // Сохранение изображения в базе данных
+            Image savedImage = imageService.saveImage(newImage);
+            ad.setImage(savedImage);
+            adRepository.save(ad);
+        }
+    }
+
+
+    public boolean isAdmin(Authentication authentication) {
+        User user = userRepository.findUserByUserName(authentication.getName());
+        return user.getRole().equals(Role.ADMIN);
+    }
+
+    public boolean isAuthor(Authentication authentication, Long adId) {
+        //        Находим объявление по id
+        Ad ad = adRepository.findById(adId).orElseThrow(
+                () -> {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                });
+//        Находим автора по id
+        User adUser = userRepository.findById(ad.getUserID()).orElseThrow(
+                () -> {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                });
+//        Находим текущего юзера
+        User currentUser = userRepository.findUserByUserName(authentication.getName());
+//        сравниваем автора и юзера
+        return adUser.getUserID().equals(currentUser.getUserID());
+    }
+
+    public String removeAd(Long pk, Authentication authentication) {
+
         // Находим по pk
         Optional<Ad> adOptional = adRepository.findById(pk);
 
@@ -158,69 +256,7 @@ public class AdsServiceImpl implements AdsService {
         }
     }
 
-    @Override
-    public AdUpdateDTO updateAd(Long pk, AdUpdateDTO adUpdateDTO) {
-        Optional<Ad> optionalAd = adRepository.findById(pk);
-        if (optionalAd.isPresent()) {
-            Ad ad = optionalAd.get();
 
-            if (adUpdateDTO.getTitle() != null) {
-                ad.setTitle(adUpdateDTO.getTitle());
-            }
-            if (adUpdateDTO.getPrice() != null) {
-                ad.setPrice(adUpdateDTO.getPrice());
-            }
-            if (adUpdateDTO.getDescription() != null) {
-                ad.setDescription(adUpdateDTO.getDescription());
-            }
-
-            // Сохраняем обновленное объявление в базу
-            adRepository.save(ad);
-
-            // Создаем объект AdsDTO для ответа с нужными полями
-            AdUpdateDTO responseAd = new AdUpdateDTO();
-            responseAd.setPrice(ad.getPrice());
-            responseAd.setTitle(ad.getTitle());
-            responseAd.setDescription(ad.getDescription());
-
-            return responseAd;
-        } else {
-            // Если объявление не найдено, возвращаем нулл, потом допилю исключение.
-            return null;
-        }
-    }
-
-    @Override
-    public List<AllAdDTO> getAdsForUser(String userName) {
-        User user = userRepository.findUserByUserName(userName);
-        Long userId = user.getUserID();
-        List<Ad> userAds = adRepository.findAdsByUserUserID(userId);
-
-        List<AllAdDTO> allAdDTOs = new ArrayList<>();
-
-        for (Ad ad : userAds) {
-            AllAdDTO adDTO = new AllAdDTO();
-            adDTO.setAuthor(ad.getUser().getUserID()); // Устанавливаем айдишник объявления
-            adDTO.setImage("/"+ ad.getImage().getImagePath().replace("\\", "/")); // Устанавливаем путь к изображению
-            adDTO.setPk(ad.getPk());
-            adDTO.setPrice(ad.getPrice());
-            adDTO.setTitle(ad.getTitle());
-
-            allAdDTOs.add(adDTO);
-        }
-
-        return allAdDTOs;
-    }
-
-    @Override
-    public void updateAdImage(Long pk, Image newImage) {
-        Ad ad = adRepository.findById(pk).orElse(null);
-        if (ad != null) {
-            // Сохранение изображения в базе данных
-            Image savedImage = imageService.saveImage(newImage);
-            ad.setImage(savedImage);
-            adRepository.save(ad);
-        }
-    }
 }
+
 

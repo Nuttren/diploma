@@ -80,8 +80,10 @@ public class AdsController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteAd(@PathVariable ("id") Long pk) {
-        String resultMessage = adsService.deleteAd(pk);
+    public ResponseEntity<String> deleteAd(
+            Authentication authentication,
+            @PathVariable ("id") Long pk) {
+        String resultMessage = adsService.deleteAd(pk, authentication);
 
         if (resultMessage.equals("Объявление успешно удалено")) {
             return ResponseEntity.ok(resultMessage);
@@ -91,8 +93,10 @@ public class AdsController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<AdUpdateDTO> updateAd(@PathVariable("id") Long pk, @RequestBody AdUpdateDTO updatedAd) {
-        AdUpdateDTO updated = adsService.updateAd(pk, updatedAd);
+    public ResponseEntity<AdUpdateDTO> updateAd(
+            Authentication authentication,
+            @PathVariable("id") Long pk, @RequestBody AdUpdateDTO updatedAd) {
+        AdUpdateDTO updated = adsService.updateAd(authentication, pk, updatedAd);
 
         if (updated != null) {
             return ResponseEntity.ok(updated);
