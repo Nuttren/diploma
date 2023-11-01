@@ -4,9 +4,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.*;
 import ru.skypro.homework.pojo.Ad;
+import ru.skypro.homework.pojo.Comment;
 import ru.skypro.homework.pojo.Image;
 import ru.skypro.homework.pojo.User;
 import ru.skypro.homework.repository.AdRepository;
+import ru.skypro.homework.repository.CommentRepository;
 import ru.skypro.homework.repository.UserRepository;
 
 
@@ -25,11 +27,14 @@ public class AdsServiceImpl implements AdsService {
 
     private final UserRepository userRepository;
 
-    public AdsServiceImpl(AdRepository adRepository, ImageService imageService, UserRepository userRepository) {
+    private final CommentRepository commentRepository;
+
+    public AdsServiceImpl(AdRepository adRepository, ImageService imageService, UserRepository userRepository, CommentRepository commentRepository) {
         this.adRepository = adRepository;
 
         this.imageService = imageService;
         this.userRepository = userRepository;
+        this.commentRepository = commentRepository;
     }
 
 
@@ -136,8 +141,16 @@ public class AdsServiceImpl implements AdsService {
         Optional<Ad> adOptional = adRepository.findById(pk);
 
         if (adOptional.isPresent()) {
+
+            // Объявление найдено
+            Long ad = adOptional.get().getPk();
+
+            // Находим все комментарии, связанные с этим объявлением
+            List<Comment> comments = commentRepository.findByPk(ad);
+            commentRepository.deleteAll(comments);
             // Если объявление найдено, сносим
             adRepository.deleteById(pk);
+
             return "Объявление успешно удалено";
         } else {
             // Если объявление не найдено, вернем сообщение об ошибке
