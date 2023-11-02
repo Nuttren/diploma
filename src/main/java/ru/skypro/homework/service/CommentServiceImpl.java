@@ -57,7 +57,7 @@ public class CommentServiceImpl implements CommentService {
             commentInfo.setAuthorImage("/"+ comment.getUser().getImage().getImagePath().replace("\\", "/"));
             commentInfo.setFirstName(comment.getUser().getFirstName());
             commentInfo.setCreatedAt(comment.getTimeStamp());
-            commentInfo.setPk(comment.getPk());
+            commentInfo.setPk(comment.getCommentId());
             commentInfo.setText(comment.getText());
 
             commentsFullInfo.add(commentInfo);

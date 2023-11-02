@@ -24,4 +24,5 @@ public class CommentInfoDTO {
 
 
         private String text;
+
     }
