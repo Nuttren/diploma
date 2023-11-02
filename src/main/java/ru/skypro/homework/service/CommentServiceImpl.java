@@ -1,15 +1,15 @@
 package ru.skypro.homework.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.CommentDTO;
 import ru.skypro.homework.dto.CommentInfoDTO;
 import ru.skypro.homework.pojo.Ad;
 import ru.skypro.homework.pojo.Comment;
-import ru.skypro.homework.pojo.User;
 import ru.skypro.homework.repository.AdRepository;
 import ru.skypro.homework.repository.CommentRepository;
-import ru.skypro.homework.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,8 +21,6 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final AdRepository adRepository;
 
-
-
     @Override
     public CommentDTO addCommentToAd(Long pk, CommentDTO commentDTO, Long userId) {
         Ad ad = adRepository.findById(pk).orElse(null);
@@ -33,34 +31,24 @@ public class CommentServiceImpl implements CommentService {
             comment.setUserId(userId);
             comment.setPk(pk);
             comment.setTimeStamp(comment.getTimeStamp());
-
             Comment savedComment = commentRepository.save(comment);
 
             // Преобразование savedComment обратно в CommentDTO и его возврат
             CommentDTO createdCommentDTO = new CommentDTO();
             createdCommentDTO.setText(savedComment.getText());
 
-
             return createdCommentDTO;
         }
         return null;
     }
 
+
     @Override
     public List<CommentInfoDTO> getAllCommentsByPK(Long pk) {
         List<Comment> comments = commentRepository.findByPk(pk); // Получаем комментарии из базы данных
         List<CommentInfoDTO> commentsFullInfo = new ArrayList<>();
-
         for (Comment comment : comments) {
-            CommentInfoDTO commentInfo = new CommentInfoDTO();
-            commentInfo.setUserName(comment.getUser().getUserName());
-            commentInfo.setAuthorImage("/"+ comment.getUser().getImage().getImagePath().replace("\\", "/"));
-            commentInfo.setFirstName(comment.getUser().getFirstName());
-            commentInfo.setCreatedAt(comment.getTimeStamp());
-            commentInfo.setPk(comment.getCommentId());
-            commentInfo.setText(comment.getText());
-
-            commentsFullInfo.add(commentInfo);
+            commentsFullInfo.add(CommentInfoDTO.fromComment(comment));
         }
 
         return commentsFullInfo;
@@ -78,6 +66,7 @@ public class CommentServiceImpl implements CommentService {
         }
     }
 
+
     @Override
     public CommentInfoDTO updateCommentAndGetInfo(Long pk, Long commentId, CommentDTO commentDTO) {
         Comment comment = commentRepository.findByPkAndCommentId(pk, commentId);
@@ -85,23 +74,11 @@ public class CommentServiceImpl implements CommentService {
         if (comment != null) {
             // Обновляем текст комментария
             comment.setText(commentDTO.getText());
-
             // Сохраняем обновленный комментарий в бд
             comment = commentRepository.save(comment);
-
-            // Преобразовываем comment в CommentInfoDTO
-            CommentInfoDTO commentInfoDTO = new CommentInfoDTO();
-            commentInfoDTO.setUserName(comment.getUser().getUserName());
-            commentInfoDTO.setAuthorImage(comment.getUser().getImage().getImagePath());
-            commentInfoDTO.setFirstName(comment.getUser().getFirstName());
-            commentInfoDTO.setCreatedAt(comment.getTimeStamp());
-            commentInfoDTO.setPk(comment.getCommentId());
-            commentInfoDTO.setText(comment.getText());
-
-            return commentInfoDTO;
+            return CommentInfoDTO.fromComment(comment);
         }
-
-        return null; // Вернуть null, исключение потом допилю
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 
 }

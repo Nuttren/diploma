@@ -130,5 +130,5 @@ public class AdsController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось обновить изображение");
         }
-}
+    }
 }
