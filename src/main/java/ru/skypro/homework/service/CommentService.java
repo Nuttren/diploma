@@ -13,9 +13,9 @@ public interface CommentService {
 
     List<CommentInfoDTO> getAllCommentsByPK(Long pk);
 
-    String deleteCommentByAdAndCommentId(Long pk, Long commentId);
+    String deleteCommentByAdAndCommentId(String pk, Long commentId, Long id);
 
-    CommentInfoDTO updateCommentAndGetInfo(Long adId, Long commentId, CommentDTO commentDTO);
+    CommentInfoDTO updateCommentAndGetInfo(String name, Long adId, Long commentId, CommentDTO commentDTO);
 
 
 

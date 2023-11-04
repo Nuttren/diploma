@@ -20,9 +20,7 @@ public class AuthServiceImpl implements AuthService {
 
 
     private final PasswordEncoder encoder;
-
     private final UserRepository userRepository;
-
     private final UserService userService;
 
     public AuthServiceImpl(PasswordEncoder encoder, UserRepository userRepository, UserService userService) {
@@ -46,17 +44,17 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public boolean register(Register register) {
-//        UserDetails existingUser = userService.loadUserByUsername(register.getUserName());
-//
-//        if (existingUser != null) {
-//            return false; // Пользователь с таким именем уже существует
-//        }
+        UserDetails existingUser = userService.loadUserByUsername(register.getUsername());
+
+        if (existingUser != null) {
+            return false; // Пользователь с таким именем уже существует
+        }
 
         User user = new User();
         user.setUserName(register.getUsername());
-//        String encodedPassword = encoder.encode(register.getPassword());
-//        user.setPassword(encodedPassword);
-        user.setPassword(register.getPassword());
+        String encodedPassword = encoder.encode(register.getPassword());
+        user.setPassword(encodedPassword);
+//        user.setPassword(register.getPassword());
         user.setRole(register.getRole());
         user.setFirstName(register.getFirstName());
         user.setLastName(register.getLastName());
