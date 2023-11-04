@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import ru.skypro.homework.dto.Role;
 import ru.skypro.homework.dto.UserDetailsDTO;
+import ru.skypro.homework.exception.UserNotFoundException;
 import ru.skypro.homework.pojo.User;
 import ru.skypro.homework.repository.UserRepository;
 
@@ -28,7 +29,8 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
 
         Optional<User> userOptional = Optional.ofNullable(userRepository.findUserByUserName(userName));
-        User user = userOptional.orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + userName));
+        User user = userOptional.orElseThrow
+                (() -> new UsernameNotFoundException("User not found with username: " + userName));
 
         // Преобразование сущности User в объект UserDetailsDTO
         UserDetailsDTO userDetails = new UserDetailsDTO(

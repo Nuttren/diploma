@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.*;
+import ru.skypro.homework.exception.AdNotFoundException;
+import ru.skypro.homework.exception.ForbittenException;
+import ru.skypro.homework.exception.UserNotFoundException;
 import ru.skypro.homework.pojo.Ad;
 import ru.skypro.homework.pojo.Comment;
 import ru.skypro.homework.pojo.Image;
@@ -67,7 +70,7 @@ public class AdsServiceImpl implements AdsService {
             }
         } else {
             // Если пользователь не найден, обработка ошибки
-            throw new RuntimeException("User not found for username: " + userName);
+            throw new UserNotFoundException();
         }
     }
 
@@ -95,7 +98,7 @@ public class AdsServiceImpl implements AdsService {
             return AdInfoDTO.fromAd(ad);
         } else {
             // Если объявление не найдено бросаем 404
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            throw new AdNotFoundException();
         }
     }
 
@@ -122,7 +125,7 @@ public class AdsServiceImpl implements AdsService {
                 return "Объявление с указанным ID не найдено";
             }
         }
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        throw new ForbittenException();
     }
 
     @Override
@@ -140,10 +143,10 @@ public class AdsServiceImpl implements AdsService {
                 return AdUpdateDTO.fromAd(ad);
             } else {
                 // Если объявление не найдено бросаем 404
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                throw new AdNotFoundException();
             }
         }
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        throw new ForbittenException();
     }
 
     @Override
@@ -181,12 +184,12 @@ public class AdsServiceImpl implements AdsService {
         //        Находим объявление по id
         Ad ad = adRepository.findById(adId).orElseThrow(
                 () -> {
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                    throw new AdNotFoundException();
                 });
         //        Находим автора по id
         User adUser = userRepository.findById(ad.getUserID()).orElseThrow(
                 () -> {
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                    throw new UserNotFoundException();
                 });
         //        Находим текущего юзера
         User currentUser = userRepository.findUserByUserName(authentication.getName());

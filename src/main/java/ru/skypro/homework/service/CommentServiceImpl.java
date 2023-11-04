@@ -1,12 +1,14 @@
 package ru.skypro.homework.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.CommentDTO;
 import ru.skypro.homework.dto.CommentInfoDTO;
 import ru.skypro.homework.dto.Role;
+import ru.skypro.homework.exception.*;
 import ru.skypro.homework.pojo.Ad;
 import ru.skypro.homework.pojo.Comment;
 import ru.skypro.homework.pojo.User;
@@ -50,7 +52,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public List<CommentInfoDTO> getAllCommentsByPK(Long pk) {
         if(adRepository.findByPk(pk) == null){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            throw new AdNotFoundException();
         }
 
         List<Comment> comments = commentRepository.findByPk(pk); // Получаем комментарии из базы данных
@@ -62,12 +64,13 @@ public class CommentServiceImpl implements CommentService {
         return commentsFullInfo;
     }
 
+
     @Override
     public String deleteCommentByAdAndCommentId(String userName, Long pk, Long commentId) {
         Comment comment = commentRepository.findByPkAndCommentId(pk, commentId);
         User user = userRepository.findUserByUserName(userName);
         if(user == null){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            throw new UserNotFoundException();
         }else if(user.getUserID().equals(comment.getUserId()) || user.getRole().equals(Role.ADMIN)) {
             if (comment != null) {
                 commentRepository.delete(comment); // Удаляем комментарий из базы данных
@@ -76,7 +79,7 @@ public class CommentServiceImpl implements CommentService {
                 return "Комментарий не найден";
             }
         }
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        throw new ForbittenException();
     }
 
 
@@ -85,7 +88,7 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = commentRepository.findByPkAndCommentId(pk, commentId);
         User user = userRepository.findUserByUserName(userName);
         if(user == null){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            throw new UserUnauthorizedException();
         }else if(user.getUserID().equals(comment.getUserId()) || user.getRole().equals(Role.ADMIN)) {
             if (comment != null) {
                 // Обновляем текст комментария
@@ -95,7 +98,7 @@ public class CommentServiceImpl implements CommentService {
                 return CommentInfoDTO.fromComment(comment);
             }
         }
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        throw new CommentNotFoundException();
     }
 
 }

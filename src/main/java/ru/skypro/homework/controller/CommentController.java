@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.skypro.homework.dto.CommentDTO;
 import ru.skypro.homework.dto.CommentInfoDTO;
+import ru.skypro.homework.exception.UserUnauthorizedException;
 import ru.skypro.homework.pojo.User;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.CommentService;
@@ -67,7 +68,7 @@ public class CommentController {
             Authentication authentication,
             @PathVariable("id") Long pk) {
         if(authentication.getName() == null){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            throw new UserUnauthorizedException();
         }
 
         List<CommentInfoDTO> comments = commentService.getAllCommentsByPK(pk);
