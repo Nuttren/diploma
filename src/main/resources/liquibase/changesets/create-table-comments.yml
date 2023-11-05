@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 4
+      author: Ruslan
+      changes:
+        - createTable:
+            tableName: comments
+            columns:
+              - column:
+                  name: comment_id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: pk
+                  type: bigint
+                  constraints:
+                    foreignKeyName: pk
+                    references: ads(pk)
+              - column:
+                  name: text
+                  type: character varying(255)
+              - column:
+                  name: comment_timestamp
+                  type: timestamp without time zone
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    foreignKeyName: user_id
+                    references: users(user_id)

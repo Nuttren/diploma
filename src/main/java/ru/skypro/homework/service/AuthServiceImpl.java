@@ -44,11 +44,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public boolean register(Register register) {
-        UserDetails existingUser = userService.loadUserByUsername(register.getUsername());
-
-        if (existingUser != null) {
-            return false; // Пользователь с таким именем уже существует
-        }
+//        UserDetails existingUser = userService.loadUserByUsername(register.getUserName());
+//
+//        if (existingUser != null) {
+//            return false; // Пользователь с таким именем уже существует
+//        }
 
         User user = new User();
         user.setUserName(register.getUsername());
@@ -64,6 +64,7 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
         return true;
     }
+
 
     @Override
 
