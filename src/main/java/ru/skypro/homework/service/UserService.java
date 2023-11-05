@@ -20,11 +20,13 @@ public class UserService implements UserDetailsService {
 
 
     private final UserRepository userRepository;
-
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Поиск пользователя по имени, возвращает DTO
+     */
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
 
@@ -32,20 +34,7 @@ public class UserService implements UserDetailsService {
         User user = userOptional.orElseThrow
                 (() -> new UsernameNotFoundException("User not found with username: " + userName));
 
-        // Преобразование сущности User в объект UserDetailsDTO
-        UserDetailsDTO userDetails = new UserDetailsDTO(
-                user.getUserID(),
-                user.getEmail(),
-                user.getUserName(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getPhone(),
-                user.getRole(),
-                user.getImage(),
-                user.getPassword()
-        );
-
-        return userDetails;
+        return UserDetailsDTO.fromUser(user);
     }
 
     // Преобразование списка ролей в коллекцию GrantedAuthority

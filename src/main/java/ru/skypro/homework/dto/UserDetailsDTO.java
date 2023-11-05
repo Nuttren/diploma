@@ -1,15 +1,20 @@
 package ru.skypro.homework.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import ru.skypro.homework.pojo.Image;
+import ru.skypro.homework.pojo.User;
 
 import java.util.Collection;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserDetailsDTO implements UserDetails {
 
     private Long id;
@@ -22,21 +27,9 @@ public class UserDetailsDTO implements UserDetails {
     private Image image;
     private String password;
 
-    public UserDetailsDTO(Long id, String email, String username, String firstName, String lastName, String phone, Role role, Image image, String password) {
-        this.id = id;
-        this.email = email;
-        this.username = username;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.phone = phone;
-        this.role = role;
-        this.image = image;
-        this.password = password;
-    }
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_"+role.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
@@ -95,5 +88,21 @@ public class UserDetailsDTO implements UserDetails {
 
     public Image getImage() {
         return image;
+    }
+
+    // Преобразование сущности User в объект UserDetailsDTO
+    public static UserDetailsDTO fromUser(User in) {
+        UserDetailsDTO out = new UserDetailsDTO();
+        out.setId(in.getUserID());
+        out.setEmail(in.getEmail());
+        out.setUsername(in.getUserName());
+        out.setFirstName(in.getFirstName());
+        out.setLastName(in.getLastName());
+        out.setPhone(in.getPhone());
+        out.setRole(in.getRole());
+        out.setImage(in.getImage());
+        out.setPassword(in.getPassword());
+
+        return out;
     }
 }

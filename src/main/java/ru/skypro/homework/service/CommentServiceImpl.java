@@ -19,6 +19,10 @@ import ru.skypro.homework.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Класс для обработки запросов CommentController
+ * Работает с CommentRepository, AdRepository, UserRepository
+ */
 @Service
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
@@ -27,6 +31,9 @@ public class CommentServiceImpl implements CommentService {
     private final AdRepository adRepository;
     private final UserRepository userRepository;
 
+    /**
+     * Добавление комментария к объявлению
+     */
     @Override
     public CommentDTO addCommentToAd(Long pk, CommentDTO commentDTO, Long userId) {
         Ad ad = adRepository.findById(pk).orElse(null);
@@ -49,6 +56,9 @@ public class CommentServiceImpl implements CommentService {
     }
 
 
+    /**
+     * Получение всех комментариев к объявлению
+     */
     @Override
     public List<CommentInfoDTO> getAllCommentsByPK(Long pk) {
         if(adRepository.findByPk(pk) == null){
@@ -65,6 +75,9 @@ public class CommentServiceImpl implements CommentService {
     }
 
 
+    /**
+     * Удаление комментария
+     */
     @Override
     public String deleteCommentByAdAndCommentId(String userName, Long pk, Long commentId) {
         Comment comment = commentRepository.findByPkAndCommentId(pk, commentId);
@@ -83,6 +96,9 @@ public class CommentServiceImpl implements CommentService {
     }
 
 
+    /**
+     * Обновление комментария
+     */
     @Override
     public CommentInfoDTO updateCommentAndGetInfo(String userName, Long pk, Long commentId, CommentDTO commentDTO) {
         Comment comment = commentRepository.findByPkAndCommentId(pk, commentId);

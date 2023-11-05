@@ -16,6 +16,7 @@ import ru.skypro.homework.pojo.Image;
 import ru.skypro.homework.pojo.User;
 import ru.skypro.homework.repository.AdRepository;
 import ru.skypro.homework.repository.CommentRepository;
+import ru.skypro.homework.repository.ImageRepository;
 import ru.skypro.homework.repository.UserRepository;
 
 
@@ -24,16 +25,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Класс для работы для обработки запросов AdsController
+ * Работает с AdRepository, UserRepository, CommentRepository, imageRepository.
+ * и ImageService (используется для загрузки изображения)
+ */
 @Service
 @RequiredArgsConstructor
 public class AdsServiceImpl implements AdsService {
 
     private final AdRepository adRepository;
-    private final ImageService imageService;
+    private final ImageRepository imageRepository;
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
+    private final ImageService imageService;
 
 
+    /**
+     * Создание объявления
+     */
     @Override
     public AdCreateDTO createAd(String userName, AdCreateDTO adCreateDTO, MultipartFile image) {
         // Находим пользователя по его имени (userName)
@@ -74,6 +84,9 @@ public class AdsServiceImpl implements AdsService {
         }
     }
 
+    /**
+     * получение списка объявлений
+     */
     @Override
     public List<AllAdDTO> getAllAds() {
         List<Ad> ads = adRepository.findAll(); // Извлекаем все объявления из базы данных
@@ -86,6 +99,9 @@ public class AdsServiceImpl implements AdsService {
         return adsRequestDTOs;
     }
 
+    /**
+     * Получение информаци об объявлении
+     */
     @Override
     public AdInfoDTO getAdsInfo(Long pk) {
         // инфа об объявлении по pk из базы данных
@@ -102,6 +118,9 @@ public class AdsServiceImpl implements AdsService {
         }
     }
 
+    /**
+     * Удаления объявления
+     */
     @Override
     public String deleteAd(Long pk, Authentication authentication) {
         if (isAdmin(authentication) || isAuthor(authentication, pk)) {
@@ -128,6 +147,9 @@ public class AdsServiceImpl implements AdsService {
         throw new ForbittenException();
     }
 
+    /**
+     * Обновление объявления
+     */
     @Override
     public AdUpdateDTO updateAd(Authentication authentication, Long pk, AdUpdateDTO adUpdateDTO) {
         if (isAdmin(authentication) || isAuthor(authentication, pk)) {
@@ -149,6 +171,9 @@ public class AdsServiceImpl implements AdsService {
         throw new ForbittenException();
     }
 
+    /**
+     * Получение списка объявлений пользователя
+     */
     @Override
     public List<AllAdDTO> getAdsForUser(String userName) {
         User user = userRepository.findUserByUserName(userName);
@@ -163,24 +188,27 @@ public class AdsServiceImpl implements AdsService {
         return allAdDTOs;
     }
 
+    /**
+     * Обновление картинки объвления
+     */
     @Override
     public void updateAdImage(Long pk, Image newImage) {
         Ad ad = adRepository.findById(pk).orElse(null);
         if (ad != null) {
             // Сохранение изображения в базе данных
-            Image savedImage = imageService.saveImage(newImage);
+            Image savedImage = imageRepository.save(newImage);
             ad.setImage(savedImage);
             adRepository.save(ad);
         }
     }
 
 
-    public boolean isAdmin(Authentication authentication) {
+    private boolean isAdmin(Authentication authentication) {
         User user = userRepository.findUserByUserName(authentication.getName());
         return user.getRole().equals(Role.ADMIN);
     }
 
-    public boolean isAuthor(Authentication authentication, Long adId) {
+    private boolean isAuthor(Authentication authentication, Long adId) {
         //        Находим объявление по id
         Ad ad = adRepository.findById(adId).orElseThrow(
                 () -> {
