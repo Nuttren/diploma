@@ -2,8 +2,10 @@ package ru.skypro.homework.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -16,9 +18,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 public class WebSecurityConfig {
 
-
-
-private final UserService userService;
+    private final UserService userService;
 
     private static final String[] AUTH_WHITELIST = {
             "/swagger-resources/**",
@@ -34,25 +34,6 @@ private final UserService userService;
     }
 
 
-//    @Bean
-//    public InMemoryUserDetailsManager userDetailsService(PasswordEncoder passwordEncoder) {
-//        UserDetails user =
-//                User.builder()
-//                        .username("user@gmail.com")
-//                        .password("password")
-//                        .passwordEncoder(passwordEncoder::encode)
-//                        .roles(Role.USER.name())
-//                        .build();
-//
-//        UserDetails admin =
-//                User.builder()
-//                        .username("admin@gmail.com")
-//                        .password(passwordEncoder.encode("adminPassword"))
-//                        .roles(Role.ADMIN.name())
-//                        .build();
-//
-//        return new InMemoryUserDetailsManager(user, admin);
-//    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -62,6 +43,10 @@ private final UserService userService;
                         authorization ->
                                 authorization
                                         .mvcMatchers(AUTH_WHITELIST)
+
+//добавление эндпоинта, доступного без авторизации
+                                        .permitAll()
+                                        .mvcMatchers(HttpMethod.GET, "/ads")
                                         .permitAll()
                                         .mvcMatchers("/ads/**", "/users/**")
                                         .authenticated())
@@ -71,11 +56,12 @@ private final UserService userService;
         return http.build();
     }
 
+
     @Bean
     public PasswordEncoder passwordEncoder() {
 
-//        return new BCryptPasswordEncoder();
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
+//        return NoOpPasswordEncoder.getInstance();
     }
 
 }

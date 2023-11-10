@@ -9,13 +9,13 @@ import java.util.List;
 
 public interface CommentService {
 
-    CommentDTO addCommentToAd(Long pk, CommentDTO commentDTO);
+    CommentDTO addCommentToAd(Long pk, CommentDTO commentDTO, Long userId);
 
     List<CommentInfoDTO> getAllCommentsByPK(Long pk);
 
-    String deleteCommentByAdAndCommentId(Long pk, Long commentId);
+    String deleteCommentByAdAndCommentId(String pk, Long commentId, Long id);
 
-    CommentInfoDTO updateCommentAndGetInfo(Long adId, Long commentId, CommentDTO commentDTO);
+    CommentInfoDTO updateCommentAndGetInfo(String name, Long adId, Long commentId, CommentDTO commentDTO);
 
 
 

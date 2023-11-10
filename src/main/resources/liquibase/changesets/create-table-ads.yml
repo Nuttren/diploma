@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3
+      author: Ruslan
+      changes:
+        - createTable:
+            tableName: ads
+            columns:
+              - column:
+                  name: pk
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    foreignKeyName: user_id
+                    references: users(user_id)
+              - column:
+                  name: description
+                  type: character varying(255)
+              - column:
+                  name: image_id
+                  type: character varying(255)
+                  constraints:
+                    foreignKeyName: image_id
+                    references: images(image_id)
+              - column:
+                  name: price
+                  type: bigint
+              - column:
+                  name: title
+                  type: character varying(255)

@@ -1,5 +1,6 @@
 package ru.skypro.homework.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,23 +16,23 @@ import ru.skypro.homework.repository.UserRepository;
 import javax.persistence.EntityNotFoundException;
 import java.util.Optional;
 
+/**
+ * Класс для обработки запросов AuthController
+ * Работает с UserRepository, UserService
+ * Использует PasswordEncoder
+ */
+@RequiredArgsConstructor
 @Service
 public class AuthServiceImpl implements AuthService {
 
-
     private final PasswordEncoder encoder;
-
     private final UserRepository userRepository;
-
     private final UserService userService;
 
-    public AuthServiceImpl(PasswordEncoder encoder, UserRepository userRepository, UserService userService) {
-        this.encoder = encoder;
-        this.userRepository = userRepository;
-        this.userService = userService;
-    }
 
-
+    /**
+     * Авторизация пользователя
+     */
     @Override
     public boolean login(String userName, String password) {
         UserDetails userDetails = userService.loadUserByUsername(userName);
@@ -43,7 +44,9 @@ public class AuthServiceImpl implements AuthService {
         return encoder.matches(password, userDetails.getPassword());
     }
 
-
+    /**
+     * Регистрация нового пользователя
+     */
     @Override
     public boolean register(Register register) {
 //        UserDetails existingUser = userService.loadUserByUsername(register.getUserName());
@@ -54,9 +57,9 @@ public class AuthServiceImpl implements AuthService {
 
         User user = new User();
         user.setUserName(register.getUsername());
-//        String encodedPassword = encoder.encode(register.getPassword());
-//        user.setPassword(encodedPassword);
-        user.setPassword(register.getPassword());
+        String encodedPassword = encoder.encode(register.getPassword());
+        user.setPassword(encodedPassword);
+//        user.setPassword(register.getPassword());
         user.setRole(register.getRole());
         user.setFirstName(register.getFirstName());
         user.setLastName(register.getLastName());
@@ -67,8 +70,11 @@ public class AuthServiceImpl implements AuthService {
         return true;
     }
 
-    @Override
 
+    /**
+     * Обновление пароля пользователя
+     */
+    @Override
     public Optional<String> changePassword(String userName, String currentPassword, String newPassword) {
         // Проверяем, существует ли пользователь с заданным именем пользователя.
         User user = userRepository.findUserByUserName(userName);
@@ -90,6 +96,9 @@ public class AuthServiceImpl implements AuthService {
 
     }
 
+    /**
+     * Обновление информации о пользователе
+     */
     @Override
     public User updateUserInfo(Authentication authentication, UpdateUserDTO updateUserDTO) {
         // Извлеките имя пользователя из аутентификации

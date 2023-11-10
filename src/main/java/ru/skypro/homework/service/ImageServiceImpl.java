@@ -1,5 +1,6 @@
 package ru.skypro.homework.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -17,31 +18,33 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-
+/**
+ * Класс для работы с изображениями
+ * Работает с ImageRepository, UserRepository, AdRepository
+ */
+@RequiredArgsConstructor
 @Service
 public class ImageServiceImpl implements ImageService {
 
     private final ImageRepository imageRepository;
-
     private final UserRepository userRepository;
-
     private final AdRepository adRepository;
 
     @Value("${image.upload.directory}")
     private String uploadDirectory;
 
 
-    public ImageServiceImpl(ImageRepository imageRepository, UserRepository userRepository, AdRepository adRepository) {
-        this.imageRepository = imageRepository;
-        this.userRepository = userRepository;
-        this.adRepository = adRepository;
-    }
-
+    /**
+     * Cохранение изображения
+     */
     @Override
     public Image saveImage(Image image) {
         return imageRepository.save(image);
     }
 
+    /**
+     * Загрузка и сохранение изображения
+     */
     @Override
     public Image uploadImage(MultipartFile file) throws IOException {
         if (!file.isEmpty()) {
@@ -58,6 +61,7 @@ public class ImageServiceImpl implements ImageService {
             image.setImageSize(file.getSize());
             image.setImageType(file.getContentType());
 
+            imageRepository.save(image);
 
             return image;
         } else {
@@ -66,7 +70,9 @@ public class ImageServiceImpl implements ImageService {
     }
 
 
-
+    /**
+     * Cохранение файла
+     */
     public String saveFile(byte[] data, String fileName) throws IOException {
         String filePath = Paths.get(uploadDirectory, fileName).toString();
         Path path = Paths.get(filePath);
@@ -74,6 +80,9 @@ public class ImageServiceImpl implements ImageService {
         return filePath;
     }
 
+    /**
+     * Загрузка аватара
+     */
     public Image uploadAvatar(MultipartFile file, Authentication authentication) throws IOException {
         if (!file.isEmpty()) {
             byte[] data = file.getBytes();
@@ -108,6 +117,9 @@ public class ImageServiceImpl implements ImageService {
         }
     }
 
+    /**
+     * Загрузка картинки объявления
+     */
     public Image uploadImageByPk(MultipartFile file, Long pk) throws IOException {
         if (!file.isEmpty()) {
             byte[] data = file.getBytes();

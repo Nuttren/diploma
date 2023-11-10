@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: Ruslan
+      changes:
+        - createTable:
+            tableName: images
+            columns:
+              - column:
+                  name: image_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: data
+                  type: bytea
+              - column:
+                  name: image_path
+                  type: character varying(255)
+              - column:
+                  name: image_size
+                  type: bigint
+              - column:
+                  name: image_type
+                  type: character varying(255)

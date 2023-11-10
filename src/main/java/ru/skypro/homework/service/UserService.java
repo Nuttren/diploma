@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import ru.skypro.homework.dto.Role;
 import ru.skypro.homework.dto.UserDetailsDTO;
+import ru.skypro.homework.exception.UserNotFoundException;
 import ru.skypro.homework.pojo.User;
 import ru.skypro.homework.repository.UserRepository;
 
@@ -19,31 +20,21 @@ public class UserService implements UserDetailsService {
 
 
     private final UserRepository userRepository;
-
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Поиск пользователя по имени, возвращает DTO
+     */
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
 
         Optional<User> userOptional = Optional.ofNullable(userRepository.findUserByUserName(userName));
-        User user = userOptional.orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + userName));
+        User user = userOptional.orElseThrow
+                (() -> new UsernameNotFoundException("User not found with username: " + userName));
 
-        // Преобразование сущности User в объект UserDetailsDTO
-        UserDetailsDTO userDetails = new UserDetailsDTO(
-                user.getUserID(),
-                user.getEmail(),
-                user.getUserName(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getPhone(),
-                user.getRole(),
-                user.getImage(),
-                user.getPassword()
-        );
-
-        return userDetails;
+        return UserDetailsDTO.fromUser(user);
     }
 
     // Преобразование списка ролей в коллекцию GrantedAuthority

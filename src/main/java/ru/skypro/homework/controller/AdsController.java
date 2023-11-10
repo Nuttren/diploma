@@ -25,7 +25,9 @@ import ru.skypro.homework.service.UserService;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-
+/**
+ * Класс-кондроллер для работы с объявлениями (Ad)
+ */
 @RestController
 @RequestMapping("/ads")
 @CrossOrigin(value = "http://localhost:3000")
@@ -34,33 +36,42 @@ public class AdsController {
     private final AdsService adsService;
     private final ImageService imageService;
 
-    private final UserService userService;
-
     public AdsController(AdsService adsService, ImageService imageService, UserService userService) {
         this.adsService = adsService;
         this.imageService = imageService;
-        this.userService = userService;
     }
 
+    /**
+     * Создание нового объявления
+     * @param authentication
+     * @param adCreateDTO
+     * @param image (MULTIPART_FORM_DATA_VALUE)
+     * @return adCreateDTO
+     * HTTPStatus 200, 401
+     */
     @PostMapping(value ="", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AdCreateDTO> createAd(
             Authentication authentication,
             @RequestPart("properties") AdCreateDTO adCreateDTO,
-            @RequestPart("file") MultipartFile file
+            @RequestPart("image") MultipartFile image
     ) {
         String userName = authentication.getName();
-
         // Вызываем сервис для создания объявления
-        AdCreateDTO createdAd = adsService.createAd(userName, adCreateDTO, file);
+        AdCreateDTO createdAd = adsService.createAd(userName, adCreateDTO, image);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAd);
     }
 
 
+    /**
+     * Получение списка всех объявлений
+     * Доступен в том числе для неавторизованных пользователей
+     * @return HashMap(key - количество объявлений, value - список объявлений)
+     * HTTPStatus 200
+     */
     @GetMapping("")
-    public ResponseEntity<Map<String, Object>> getAllAds() {
+    public ResponseEntity <?> getAllAds() {
         List<AllAdDTO> ads = adsService.getAllAds();
-
         Map<String, Object> response = new HashMap<>();
         response.put("count", ads.size());
         response.put("results", ads);
@@ -68,6 +79,13 @@ public class AdsController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Получение полной информации об объявлении
+     * @param pk - id объявления
+     * @return AdInfoDTO (pk, authorFirstName, authorLastName, description
+     *                    email, image, phone, price, title)
+     * HTTPStatus 200, 401, 404
+     */
     @GetMapping("/{id}")
     public ResponseEntity<AdInfoDTO> getAdInfo(@PathVariable ("id")Long pk) {
         AdInfoDTO adInfoDTO = adsService.getAdsInfo(pk);
@@ -79,9 +97,18 @@ public class AdsController {
         }
     }
 
+    /**
+     * Удаление объявления
+     * @param authentication
+     * @param pk - id объявления
+     * @return
+     * HTTPStatus 401, 403, 404
+     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteAd(@PathVariable ("id") Long pk) {
-        String resultMessage = adsService.deleteAd(pk);
+    public ResponseEntity<String> deleteAd(
+            Authentication authentication,
+            @PathVariable ("id") Long pk) {
+        String resultMessage = adsService.deleteAd(pk, authentication);
 
         if (resultMessage.equals("Объявление успешно удалено")) {
             return ResponseEntity.ok(resultMessage);
@@ -90,9 +117,20 @@ public class AdsController {
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<AdUpdateDTO> updateAd(@PathVariable("id") Long pk, @RequestBody AdUpdateDTO updatedAd) {
-        AdUpdateDTO updated = adsService.updateAd(pk, updatedAd);
+    /**
+     * Обновление информации об объявлении
+     * @param authentication
+     * @param pk - id объявления
+     * @param updatedAd (title, price, description)
+     * @return updatedAd (title, price, description)
+     * HTTPStatus 200, 401, 403, 404
+     */
+    @PatchMapping("/{id}")
+    public ResponseEntity<AdUpdateDTO> updateAd(
+            Authentication authentication,
+            @PathVariable("id") Long pk,
+            @RequestBody AdUpdateDTO updatedAd) {
+        AdUpdateDTO updated = adsService.updateAd(authentication, pk, updatedAd);
 
         if (updated != null) {
             return ResponseEntity.ok(updated);
@@ -101,6 +139,12 @@ public class AdsController {
         }
     }
 
+    /**
+     * Получение объявлений авторизованного пользователя
+     * @param authentication
+     * @return HashMap(key - количество объявлений, value - список объявлений)
+     * HTTPStatus 200, 401, 403, 404
+     */
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getUserAds(Authentication authentication) {
         String username = authentication.getName();
@@ -113,18 +157,25 @@ public class AdsController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping(value ="/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    /**
+     * Обновление картинки объявления
+     * @param pk - id объявления
+     * @param image (MULTIPART_FORM_DATA_VALUE)
+     * @return String - сообщение)
+     * HTTPStatus 200, 401, 403, 404
+     */
+    @PatchMapping(value ="/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> updateAdImage(
             @PathVariable("id") Long pk,
-            @RequestParam("file") MultipartFile imageFile
+            @RequestParam("image") MultipartFile image
     ) {
         try {
-            Image newImage = imageService.uploadImageByPk(imageFile, pk);
+            Image newImage = imageService.uploadImageByPk(image, pk);
             adsService.updateAdImage(pk, newImage);
             return ResponseEntity.ok("Изображение успешно обновлено");
         } catch (IOException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось обновить изображение");
         }
-}
+    }
 }
