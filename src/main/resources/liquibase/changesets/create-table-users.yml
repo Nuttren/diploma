@@ -3,7 +3,13 @@ databaseChangeLog:
       id: 2
       author: Ruslan
       changes:
+        - preConditions:
+              onFail: MARK_RAN
+              not:
+                tableExists:
+                  tableName: users
         - createTable:
+
             tableName: users
             columns:
               - column:

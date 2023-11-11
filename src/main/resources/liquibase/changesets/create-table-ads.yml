@@ -3,6 +3,11 @@ databaseChangeLog:
       id: 3
       author: Ruslan
       changes:
+        - preConditions:
+              onFail: MARK_RAN
+              not:
+                tableExists:
+                  tableName: users
         - createTable:
             tableName: ads
             columns:
